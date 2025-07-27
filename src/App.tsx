@@ -35,6 +35,7 @@ type UserInput = {
   gradePercentage: string; // 학업 성적 백분율
   extracurricular: string; // 교과 외 활동실적 (0-10)
   bonus: string; // 특별 가산점 (0-10)
+  originalLanguageCourses: string; // 원어강의 이수 교과목 수
 };
 
 type CalculationResult = {
@@ -43,11 +44,13 @@ type CalculationResult = {
   gradeScore: number;
   extracurricularScore: number;
   bonusScore: number;
+  originalLanguageScore: number; // 원어강의 점수
   totalScore: number;
   details: {
     languageTest: LanguageTest;
     languageInput: string;
     gradePercentage: number;
+    originalLanguageCourses: number;
   };
 };
 
@@ -61,6 +64,7 @@ const App: React.FC = () => {
       gradePercentage: "",
       extracurricular: "",
       bonus: "",
+      originalLanguageCourses: "",
     },
   ]);
   const [results, setResults] = useState<CalculationResult[]>([]);
@@ -77,6 +81,7 @@ const App: React.FC = () => {
         gradePercentage: "",
         extracurricular: "",
         bonus: "",
+        originalLanguageCourses: "",
       },
     ]);
   };
@@ -129,8 +134,20 @@ const App: React.FC = () => {
       );
       const bonusScore = Math.min(Math.max(parseFloat(u.bonus) || 0, 0), 10);
 
+      // 원어강의 점수 계산: 3점 * 교과목 수, 최대 10점
+      const originalLanguageCourseCount =
+        parseInt(u.originalLanguageCourses) || 0;
+      const originalLanguageScore = Math.min(
+        originalLanguageCourseCount * 3,
+        10
+      );
+
       const totalScore =
-        languageScore + gradeScore + extracurricularScore + bonusScore;
+        languageScore +
+        gradeScore +
+        extracurricularScore +
+        bonusScore +
+        originalLanguageScore;
 
       return {
         id: u.id,
@@ -138,6 +155,7 @@ const App: React.FC = () => {
         gradeScore,
         extracurricularScore,
         bonusScore,
+        originalLanguageScore,
         totalScore,
         details: {
           languageTest: u.languageTest,
@@ -145,6 +163,7 @@ const App: React.FC = () => {
             ? `${u.languageLevel} ${u.languageScore}`
             : u.languageScore,
           gradePercentage,
+          originalLanguageCourses: originalLanguageCourseCount,
         },
       };
     });
@@ -331,7 +350,7 @@ const App: React.FC = () => {
                 <th className="border border-black px-4 py-3">
                   외국어
                   <br />
-                  (60점)
+                  (50점)
                 </th>
                 <th className="border border-black px-4 py-3">
                   학업성적
@@ -349,9 +368,14 @@ const App: React.FC = () => {
                   (10점)
                 </th>
                 <th className="border border-black px-4 py-3">
+                  원어강의
+                  <br />
+                  (10점)
+                </th>
+                <th className="border border-black px-4 py-3">
                   총점
                   <br />
-                  (110점)
+                  (120점)
                 </th>
               </tr>
             </thead>
@@ -381,6 +405,12 @@ const App: React.FC = () => {
                   <td className="border border-black px-4 py-3 text-center">
                     {result.bonusScore}점
                   </td>
+                  <td className="border border-black px-4 py-3 text-center">
+                    <div>{result.originalLanguageScore}점</div>
+                    <div className="text-xs text-gray-600">
+                      {result.details.originalLanguageCourses}교과목
+                    </div>
+                  </td>
                   <td className="border border-black px-4 py-3 text-center font-bold">
                     {result.totalScore}점
                   </td>
@@ -402,23 +432,23 @@ const App: React.FC = () => {
         <div className="mt-12 text-sm text-gray-700">
           <p className="font-semibold mb-4">안내 사항:</p>
           <ol className="list-decimal list-inside space-y-2">
-            <li>총점은 110점으로 하며, 평가학목 및 배점 등 다음과 같음.</li>
+            <li>총점은 120점으로 하며, 평가학목 및 배점 등 다음과 같음.</li>
             <li>
-              평가학목 및 배점: 외국어 준비도 60점, 학업성적 30점, 교과 외
-              활동실적 10점, 특별 가산점 10점
+              평가학목 및 배점: 외국어 준비도 50점, 학업성적 30점, 교과 외
+              활동실적 10점, 특별 가산점 10점, 원어강의 이수 10점
             </li>
             <li>
               <strong>교과 외 활동실적 (최대 10점):</strong>
               <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
                 <li>PNU Buddy: 3점 (국제처 주관)</li>
                 <li>i PNU 토플 특강, 한국어능보대사: 1점 (언어교육원 주관)</li>
-                <li>한국어도우미, CLS 프로그램 클메이트 등 기타 활동</li>
+                <li>한국어도우미, CLS 프로그램 클메이트 등 기타 활동: 1점</li>
               </ul>
             </li>
             <li>
-              <strong>원어강의 이수 교과목 수:</strong> 이수한 원어강의 1
-              교과목당 3점 (지원언어 무관, 최대 10점). 단, 실용영어 글로벌 영어,
-              타 대학 취득 학점 제외
+              <strong>원어강의 이수 교과목 수 (최대 10점):</strong> 이수한
+              원어강의 1 교과목당 3점 (지원언어 무관, 최대 10점). 단, 실용영어
+              글로벌 영어, 타 대학 취득 학점 제외
             </li>
           </ol>
         </div>
@@ -440,10 +470,30 @@ const App: React.FC = () => {
           >
             <h2 className="text-xl font-semibold mb-4">사용자 {idx + 1}</h2>
 
+            {/* 학업 성적 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                학업 성적 백분율 (30점)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                placeholder="상위 몇 % (예: 10)"
+                value={u.gradePercentage}
+                onChange={(e) =>
+                  handleChange(u.id, "gradePercentage", e.target.value)
+                }
+                className="w-full mb-3 border border-gray-400 rounded px-3 py-2"
+              />
+              <small className="text-gray-600">0%가 1등, 100%가 꼴등</small>
+            </div>
+
             {/* 외국어 시험 선택 */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">
-                외국어 시험 (60점)
+                외국어 시험 (50점)
               </label>
               <select
                 value={u.languageTest}
@@ -471,24 +521,23 @@ const App: React.FC = () => {
               {renderLanguageInputs(u)}
             </div>
 
-            {/* 학업 성적 */}
+            {/* 원어강의 이수 교과목 수 */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">
-                학업 성적 백분율 (30점)
+                원어강의 이수 교과목 수 (10점)
               </label>
               <input
                 type="number"
-                step="0.1"
                 min="0"
-                max="100"
-                placeholder="상위 몇 % (예: 10)"
-                value={u.gradePercentage}
+                max="10"
+                placeholder="교과목 수"
+                value={u.originalLanguageCourses}
                 onChange={(e) =>
-                  handleChange(u.id, "gradePercentage", e.target.value)
+                  handleChange(u.id, "originalLanguageCourses", e.target.value)
                 }
                 className="w-full mb-3 border border-gray-400 rounded px-3 py-2"
               />
-              <small className="text-gray-600">0%가 1등, 100%가 꼴등</small>
+              <small className="text-gray-600">1교과목당 3점, 최대 10점</small>
             </div>
 
             {/* 교과 외 활동실적 */}
